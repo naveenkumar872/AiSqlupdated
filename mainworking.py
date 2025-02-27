@@ -22,7 +22,7 @@ key1=0
 key2=1000
 key3=2000
 schema_details = schema_venum()
-os.environ['GOOGLE_API_KEY'] ="AIzaSyBEeIGxpdKR7rAg6ALiLD9pgYNkVJOyt2A"
+
 # llm = ChatGroq(model="llam",temperature=0)
 # Set Streamlit page configuration
 st.set_page_config(page_title="AI SQL", layout="wide")
