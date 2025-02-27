@@ -17,7 +17,7 @@ import matplotlib as plt
 from langchain_google_genai import ChatGoogleGenerativeAI
 # Setup env variables
 
-groq_api_key = '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'
+groq_api_key =  st.secrets['groq']
 key1=0
 key2=1000
 key3=2000
