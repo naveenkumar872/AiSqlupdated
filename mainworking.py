@@ -201,160 +201,160 @@ if st.session_state.sidebar_selection == "AI-SQL":
     input_with_sql=""
     
     # def start(user_input,key1,key2,key3):
-        if user_input:
-            with st.spinner("Generating your response"):
-                # Generate SQL query
-                sql_query = conversation_chain.run(input=user_input)
+    if user_input:
+        with st.spinner("Generating your response"):
+            # Generate SQL query
+            sql_query = conversation_chain.run(input=user_input)
 
-                # Concatenate user input and SQL query
-                input_with_sql = f"{user_input} {sql_query}" if sql_query else user_input
+            # Concatenate user input and SQL query
+            input_with_sql = f"{user_input} {sql_query}" if sql_query else user_input
 
-                output = conversation_chain.run(input_with_sql)
+            output = conversation_chain.run(input_with_sql)
 
-                st.session_state.sql_statement.append(sql_query)
-
-
+            st.session_state.sql_statement.append(sql_query)
 
 
 
 
-                # Check if the input contains a "SELECT" statement
-                if "SELECT" in sql_query or "SHOW" in sql_query:
-                    # Execute the SQL query
-                    df = execute_mysql_query(sql_query)
-                    st.session_state.row_count=  df.shape[0] if isinstance(df, pd.DataFrame) else 0
-                    st.session_state.columns = df.columns.tolist() if isinstance(df, pd.DataFrame) else []
 
-                    # Store user input and generated output
-                    st.session_state.past.append(user_input)
-                    st.session_state.generated.append(df)
 
-                    if isinstance(df, pd.DataFrame):
-                        # Append the new DataFrame to the list of DataFrames
-                        st.session_state.input_history.append(user_input)
-                        st.session_state.output_tables.append(df)
-                    else:
-                        st.session_state.input_history.append(user_input)
-                        st.session_state.output_tables.append(df)
+            # Check if the input contains a "SELECT" statement
+            if "SELECT" in sql_query or "SHOW" in sql_query:
+                # Execute the SQL query
+                df = execute_mysql_query(sql_query)
+                st.session_state.row_count=  df.shape[0] if isinstance(df, pd.DataFrame) else 0
+                st.session_state.columns = df.columns.tolist() if isinstance(df, pd.DataFrame) else []
 
+                # Store user input and generated output
+                st.session_state.past.append(user_input)
+                st.session_state.generated.append(df)
+
+                if isinstance(df, pd.DataFrame):
+                    # Append the new DataFrame to the list of DataFrames
+                    st.session_state.input_history.append(user_input)
+                    st.session_state.output_tables.append(df)
                 else:
-                    # If it's not a SELECT statement, simply append the user input
-                    st.session_state.past.append(user_input)
-                    st.session_state.generated.append(sql_query)
-                    if isinstance(sql_query, type(sql_query)):
-                        st.session_state.con_history.append(sql_query)
-                        st.session_state.input_history.append(user_input)
+                    st.session_state.input_history.append(user_input)
+                    st.session_state.output_tables.append(df)
 
-        # Display user input and AI response
-        for input_, output, sql_query1 in zip(st.session_state.input_history, st.session_state.generated, st.session_state.sql_statement):
-            st.markdown(f"{user_icon}<b>  :red[Your Input]</b>", unsafe_allow_html=True)
-            with st.container():
-                st.markdown(f"{input_}", unsafe_allow_html=True)
-            st.write("")
-            st.markdown(f"{bot_icon}<b>  :red[AI Response:]</b>", unsafe_allow_html=True)
+            else:
+                # If it's not a SELECT statement, simply append the user input
+                st.session_state.past.append(user_input)
+                st.session_state.generated.append(sql_query)
+                if isinstance(sql_query, type(sql_query)):
+                    st.session_state.con_history.append(sql_query)
+                    st.session_state.input_history.append(user_input)
 
-            with st.container():
-                if isinstance(output, pd.DataFrame) and not output.empty:
-                    tab_titles = ["Output", "SQL Query","Visualization"]
-                    tabs = st.tabs(tab_titles)
+    # Display user input and AI response
+    for input_, output, sql_query1 in zip(st.session_state.input_history, st.session_state.generated, st.session_state.sql_statement):
+        st.markdown(f"{user_icon}<b>  :red[Your Input]</b>", unsafe_allow_html=True)
+        with st.container():
+            st.markdown(f"{input_}", unsafe_allow_html=True)
+        st.write("")
+        st.markdown(f"{bot_icon}<b>  :red[AI Response:]</b>", unsafe_allow_html=True)
 
-                    with tabs[0]:
-                        st.markdown(":blue[Output]:")
-                        try:
-                            st.write(output)
-                        except:
-                            st.table(output)
+        with st.container():
+            if isinstance(output, pd.DataFrame) and not output.empty:
+                tab_titles = ["Output", "SQL Query","Visualization"]
+                tabs = st.tabs(tab_titles)
 
-                    with tabs[1]:
-                        st.markdown("Generated :blue[SQL Query]:")
-                        st.code(sql_query1)
-                    # Define a tab for visualization and store user input
-                    with tabs[2]:
-                        # Create a unique key for each chat input using the query counter
-                        ques = st.selectbox(
-                        "Visualize",
-                        options=["Histogram", "Bar Chart", "Line Chart", "Pie Chart"],
-                        key=f"{key1}"        
-                        )
-                        # Input box to get the number of rows (default is All rows)
-                        num_rows = st.text_input("Enter number of rows", "All",key=f"{key2}" )
-                        selected_columns = st.multiselect("Select a Column:", st.session_state.columns,key=f"{key3}")
-                        
-                        if num_rows.lower() == "all":
-                            if st.session_state.row_count > 50:
-                                # Display a warning if the number of rows exceeds 50 for any chart type
-                                if ques in ["Histogram", "Bar Chart", "Line Chart", "Pie Chart"]:
-                                    st.warning(f"{ques} cannot display more than 50 rows. Your dataset has {st.session_state.row_count} rows.")
-                                    # Skip further processing
-                                    
+                with tabs[0]:
+                    st.markdown(":blue[Output]:")
+                    try:
+                        st.write(output)
+                    except:
+                        st.table(output)
 
-                        elif num_rows.isdigit():
-                            # Validate numeric input for number of rows
-                            selected_rows = int(num_rows)
-                            if selected_rows > st.session_state.row_count:
-                                st.warning(f"You have entered {selected_rows} rows, but the dataset only has {st.session_state.row_count} rows.")
+                with tabs[1]:
+                    st.markdown("Generated :blue[SQL Query]:")
+                    st.code(sql_query1)
+                # Define a tab for visualization and store user input
+                with tabs[2]:
+                    # Create a unique key for each chat input using the query counter
+                    ques = st.selectbox(
+                    "Visualize",
+                    options=["Histogram", "Bar Chart", "Line Chart", "Pie Chart"],
+                    key=f"{key1}"        
+                    )
+                    # Input box to get the number of rows (default is All rows)
+                    num_rows = st.text_input("Enter number of rows", "All",key=f"{key2}" )
+                    selected_columns = st.multiselect("Select a Column:", st.session_state.columns,key=f"{key3}")
+                    
+                    if num_rows.lower() == "all":
+                        if st.session_state.row_count > 50:
+                            # Display a warning if the number of rows exceeds 50 for any chart type
+                            if ques in ["Histogram", "Bar Chart", "Line Chart", "Pie Chart"]:
+                                st.warning(f"{ques} cannot display more than 50 rows. Your dataset has {st.session_state.row_count} rows.")
+                                # Skip further processing
                                 
+
+                    elif num_rows.isdigit():
+                        # Validate numeric input for number of rows
+                        selected_rows = int(num_rows)
+                        if selected_rows > st.session_state.row_count:
+                            st.warning(f"You have entered {selected_rows} rows, but the dataset only has {st.session_state.row_count} rows.")
                             
-                        else:
-                            st.warning("Invalid input. Please enter 'All' or a valid number of rows.")
-                        #ques = f"Visualize the data as a {ques} using {num_rows} rows."
-                        ques = f"Create a {ques} using {'all rows' if num_rows.lower() == 'all' else f'the first {num_rows} rows'} of the dataset, focusing on the columns {', '.join(selected_columns)} and highlighting key trends or patterns."
+                        
+                    else:
+                        st.warning("Invalid input. Please enter 'All' or a valid number of rows.")
+                    #ques = f"Visualize the data as a {ques} using {num_rows} rows."
+                    ques = f"Create a {ques} using {'all rows' if num_rows.lower() == 'all' else f'the first {num_rows} rows'} of the dataset, focusing on the columns {', '.join(selected_columns)} and highlighting key trends or patterns."
 
 
-        
-                        
-                        key1=key1+1
-                        key2=key2+1
-                        key3=key3+1
-                        
-                        if st.button("Visualize", key=f"visualize_button_{key1}"):
+    
                     
-                            st.session_state.query_counter += 1  # Increment query counter to make the input key unique
-                            
-                            # Save the conversation (ques) to session state to keep track of queries
-                            st.session_state.conversations.append(ques)
-                            
-                            # Process the query and visualize the result
-                            df = SmartDataframe(output, config={"llm": llm})
-                            result = df.chat(ques)
-                            
-                            # Handle different response types and display appropriately
-                            if isinstance(result, str):
-                                st.write(result)  # Display plain text if the response is a string
-                            elif isinstance(result, plt.Figure):
-                                st.image(result)  # Display an image if the response is a figure
-                            else:
-                                st.write("Unsupported response type.")
+                    key1=key1+1
+                    key2=key2+1
+                    key3=key3+1
+                    
+                    if st.button("Visualize", key=f"visualize_button_{key1}"):
                 
-                elif isinstance(output, str):
-                 
-                    # if "error" in output:
-                    #     regen=f'{input_with_sql}, for input and sql query this: {output} ,error generated, now adjust the sql query to fix the error'
-                    #     start(regen,key1,key2,key3)
-                    
-                    st.write(output)
-                else :
-            # Handle empty DataFrame
-                        diagnosis = conversation_chain.run(input="The query returned no results. Could you help diagnose why with the help of schema?, answer me with what might be the issue and restrict the response in 5 lines and give it in points")
-                        st.write(diagnosis)
-                        st.session_state.past.append(user_input)
-                        # st.session_state.generated.append(diagnosis)
-                        st.session_state.output_tables.append(diagnosis)
-                        # if isinstance(df, pd.DataFrame):
-                        #     st.session_state.input_history.append(user_input)
-                        #     st.session_state.output_tables.append(diagnosis)
+                        st.session_state.query_counter += 1  # Increment query counter to make the input key unique
+                        
+                        # Save the conversation (ques) to session state to keep track of queries
+                        st.session_state.conversations.append(ques)
+                        
+                        # Process the query and visualize the result
+                        df = SmartDataframe(output, config={"llm": llm})
+                        result = df.chat(ques)
+                        
+                        # Handle different response types and display appropriately
+                        if isinstance(result, str):
+                            st.write(result)  # Display plain text if the response is a string
+                        elif isinstance(result, plt.Figure):
+                            st.image(result)  # Display an image if the response is a figure
+                        else:
+                            st.write("Unsupported response type.")
             
-    # start(user_input,key1,key2,key3)
-    # Prepare data for download
-    download_str = "\n".join(map(str, download_data))
-    if download_str:
-        st.download_button("Download", download_str)
+            elif isinstance(output, str):
+             
+                # if "error" in output:
+                #     regen=f'{input_with_sql}, for input and sql query this: {output} ,error generated, now adjust the sql query to fix the error'
+                #     start(regen,key1,key2,key3)
+                
+                st.write(output)
+            else :
+        # Handle empty DataFrame
+                    diagnosis = conversation_chain.run(input="The query returned no results. Could you help diagnose why with the help of schema?, answer me with what might be the issue and restrict the response in 5 lines and give it in points")
+                    st.write(diagnosis)
+                    st.session_state.past.append(user_input)
+                    # st.session_state.generated.append(diagnosis)
+                    st.session_state.output_tables.append(diagnosis)
+                    # if isinstance(df, pd.DataFrame):
+                    #     st.session_state.input_history.append(user_input)
+                    #     st.session_state.output_tables.append(diagnosis)
+        
+# start(user_input,key1,key2,key3)
+# Prepare data for download
+download_str = "\n".join(map(str, download_data))
+if download_str:
+    st.download_button("Download", download_str)
 
-    for i, sublist in enumerate(st.session_state.stored_session):
-        with st.sidebar.expander(label=f"Conversation-Session:{i}"):
-            st.write(sublist)
+for i, sublist in enumerate(st.session_state.stored_session):
+    with st.sidebar.expander(label=f"Conversation-Session:{i}"):
+        st.write(sublist)
 
-    # Allow the user to clear all stored conversation sessions
-    if st.session_state.stored_session:
-        if st.sidebar.checkbox("Clear-all"):
-            del st.session_state.stored_session
+# Allow the user to clear all stored conversation sessions
+if st.session_state.stored_session:
+    if st.sidebar.checkbox("Clear-all"):
+        del st.session_state.stored_session
