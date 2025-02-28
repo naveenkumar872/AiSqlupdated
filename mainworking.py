@@ -16,8 +16,8 @@ from pandasai.llm import BambooLLM
 import matplotlib as plt
 from langchain_google_genai import ChatGoogleGenerativeAI
 # Setup env variables
-
-groq_api_key =  st.secrets['groq']
+OPENAI_API_KEY = st.secrets['openai']
+# groq_api_key =  st.secrets['groq']
 key1=0
 key2=1000
 key3=2000
@@ -84,8 +84,8 @@ def new_chat():
     st.session_state.entity_memory.buffer.clear()
 
 # Create an OpenAI instance
-# llm = ChatOpenAI(temperature=0, openai_api_key=OPENAI_API_KEY, model="gpt-4", verbose=False)
-llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama-3.3-70b-versatile",temperature=0,verbose=False)
+llm = ChatOpenAI(temperature=0, openai_api_key=OPENAI_API_KEY, model="gpt-4", verbose=False)
+# llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama-3.3-70b-versatile",temperature=0,verbose=False)
 
 if "entity_memory" not in st.session_state:
     st.session_state.entity_memory = ConversationEntityMemory(llm=llm)
@@ -200,7 +200,7 @@ if st.session_state.sidebar_selection == "AI-SQL":
     download_data = []
     input_with_sql=""
     
-    def start(user_input,key1,key2,key3):
+    # def start(user_input,key1,key2,key3):
         if user_input:
             with st.spinner("Generating your response"):
                 # Generate SQL query
@@ -328,9 +328,9 @@ if st.session_state.sidebar_selection == "AI-SQL":
                 
                 elif isinstance(output, str):
                  
-                    if "error" in output:
-                        regen=f'{input_with_sql}, for input and sql query this: {output} ,error generated, now adjust the sql query to fix the error'
-                        start(regen,key1,key2,key3)
+                    # if "error" in output:
+                    #     regen=f'{input_with_sql}, for input and sql query this: {output} ,error generated, now adjust the sql query to fix the error'
+                    #     start(regen,key1,key2,key3)
                     
                     st.write(output)
                 else :
@@ -344,7 +344,7 @@ if st.session_state.sidebar_selection == "AI-SQL":
                         #     st.session_state.input_history.append(user_input)
                         #     st.session_state.output_tables.append(diagnosis)
             
-    start(user_input,key1,key2,key3)
+    # start(user_input,key1,key2,key3)
     # Prepare data for download
     download_str = "\n".join(map(str, download_data))
     if download_str:
